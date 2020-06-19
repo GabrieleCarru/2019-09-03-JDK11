@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import it.polito.tdp.food.model.Adiacenza;
 import it.polito.tdp.food.model.Condiment;
 import it.polito.tdp.food.model.Food;
 import it.polito.tdp.food.model.Portion;
@@ -109,6 +111,78 @@ public class FoodDao {
 
 	}
 	
+	public List<String> getTipiPorzione(Double calories) {
+		String sql = "select distinct(portion_display_name) as nome " + 
+				"from portion " + 
+				"where calories < ?";
+		
+		List<String> result = new ArrayList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setDouble(1, calories);
+			ResultSet rs = st.executeQuery();
+			
+			while(rs.next()) {
+				result.add(rs.getString("nome"));
+			}
+			
+			conn.close();
+			return result;
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
 	
+	public List<Adiacenza> getTipiEPeso(Double calories) {
+		String sql = "select p1.portion_display_name as t1, p2.portion_display_name as t2, " + 
+				"count(distinct(p1.portion_id)) as peso " + 
+				"from portion p1, portion p2 " + 
+				"where p1.food_code = p1.food_code " + 
+				"and p1.portion_id <> p2.portion_id " + 
+				"and p1.portion_display_name < p2.portion_display_name " + 
+				"and p1.calories < ? " + 
+				"and p2.calories < ? " + 
+				"group by p1.portion_display_name, p2.portion_display_name ";
+		
+		List<Adiacenza> result = new ArrayList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setDouble(1, calories);
+			st.setDouble(2, calories);
+			ResultSet rs = st.executeQuery();
+			
+			while(rs.next()) {
+				result.add(new Adiacenza(rs.getString("t1"), 
+										rs.getString("t2"), 
+										rs.getInt("peso")));
+			}
+			
+			conn.close();
+			return result;
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+	
+	/*
+	 * METODO CON VARIE CHIAMATE AL DAO
+select distinct(p1.portion_id)
+from portion p1, portion p2
+where p1.food_code = p1.food_code
+and p1.portion_id < p2.portion_id
+and p1.portion_display_name = "Cup"
+and p2.portion_display_name = "Sandwich"
+
+	 */
 
 }

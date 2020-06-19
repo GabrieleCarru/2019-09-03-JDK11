@@ -60,8 +60,33 @@ public class FoodController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
+    	
+    	try {
+    		Double calories = Double.parseDouble(txtCalorie.getText());
+    		if(calories < 0) {
+    			txtResult.setText("Inserire un valore positivo per le calorie.");
+    			return;
+    		}
+    		
+    		if(calories.isNaN()) {
+    			txtResult.setText("Inserire un valore numerico positivo per le calorie.");
+    			return;
+    		}
+    		
+    		txtResult.appendText("Creo il grafo...\n");
+    		this.model.creaGrafo(calories);
+    		txtResult.appendText(String.format("Grafo creato! #Vertici %d #Archi %d \n", 
+    										this.model.getNumberVertex(), 
+    										this.model.getNumberEdge()));
+    		
+    		
+    	} catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.appendText("Inserire un valore numerico valido.");
+    		return;
+    	}
     	
     }
 
