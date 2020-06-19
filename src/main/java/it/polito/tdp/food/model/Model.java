@@ -23,16 +23,18 @@ public class Model {
 		graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 		adiacenze = dao.getTipiEPeso(calories);
 		
+		Graphs.addAllVertices(this.graph, dao.getTipiPorzione(calories));
+		
 		for(Adiacenza a : adiacenze) {
-			if(!graph.containsVertex(a.getT1())) {
-				graph.addVertex(a.getT1());
-			}
+//			if(!graph.containsVertex(a.getT1())) {
+//				graph.addVertex(a.getT1());
+//			}
+//			
+//			if(!graph.containsVertex(a.getT2())) {
+//				graph.addVertex(a.getT2());
+//			}
 			
-			if(!graph.containsVertex(a.getT2())) {
-				graph.addVertex(a.getT2());
-			}
-			
-			if(graph.containsVertex(a.getT1()) && graph.containsVertex(a.getT2())) {
+			if(graph.vertexSet().contains(a.getT1()) && graph.vertexSet().contains(a.getT2())) {
 				Graphs.addEdge(this.graph, a.getT1(), a.getT2(), a.getPeso());
 			}
 		}

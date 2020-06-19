@@ -140,11 +140,10 @@ public class FoodDao {
 	
 	public List<Adiacenza> getTipiEPeso(Double calories) {
 		String sql = "select p1.portion_display_name as t1, p2.portion_display_name as t2, " + 
-				"count(distinct(p1.portion_id)) as peso " + 
+				"count(distinct(p1.food_code)) as peso " + 
 				"from portion p1, portion p2 " + 
-				"where p1.food_code = p1.food_code " + 
-				"and p1.portion_id <> p2.portion_id " + 
-				"and p1.portion_display_name < p2.portion_display_name " + 
+				"where p1.food_code = p2.food_code " +  
+				"and p1.portion_display_name <> p2.portion_display_name " + 
 				"and p1.calories < ? " + 
 				"and p2.calories < ? " + 
 				"group by p1.portion_display_name, p2.portion_display_name ";
