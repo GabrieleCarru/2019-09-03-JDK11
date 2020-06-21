@@ -5,7 +5,11 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.food.model.Correlato;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,21 +44,59 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
     @FXML
     void doCammino(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	txtResult.appendText("\n");
+    	
+    	String porzione = boxPorzioni.getValue();
+    	if(porzione == null) {
+    		txtResult.appendText("Errore: selezionare un tipo di porzione. ");
+    		return;
+    	}
+    	
+    	Integer passi;
+    	try {
+    		passi = Integer.parseInt(txtPassi.getText());
+    	} catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.appendText("Inserire un numero intero positivo per il numero di passi. \n");
+    		return;
+    	}
+    	txtResult.appendText("Cerco cammino di " + passi + " passi con peso massimo... \n");
+    	
+    	this.model.trovaCammino(porzione, passi);
+    	
+    	if(this.model.getCamminoMax() == null) {
+    		txtResult.appendText("Non ho trovato un cammino. \n");
+    		return;
+    	} else {
+    		txtResult.appendText("Cammino trovato con peso massimo = " + this.model.getPesoMax() + ". \n");
+    		for(String s : this.model.getCamminoMax()) {
+    			txtResult.appendText(s + "\n");
+    		}
+    	}
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
+    	
+    	txtResult.appendText("\n");
+    	String porzione = boxPorzioni.getValue();
+    	if(porzione == null) {
+    		txtResult.appendText("Errore: selezionare un tipo di porzione. ");
+    		return;
+    	}
+    	txtResult.appendText("I tipi di porzione correlati a " + porzione + " sono: \n");
+    	
+    	List<Correlato> vicini = this.model.getVicini(porzione);
+    	for(Correlato c : vicini) {
+    		txtResult.appendText(String.format("%s [%f] \n", c.getCorrelato(), c.getPeso()));
+    	}
     	
     }
 
@@ -63,31 +105,35 @@ public class FoodController {
     	
     	txtResult.clear();
     	
+    	Double calories;
     	try {
-    		Double calories = Double.parseDouble(txtCalorie.getText());
-    		if(calories < 0) {
-    			txtResult.setText("Inserire un valore positivo per le calorie.");
-    			return;
-    		}
-    		
-    		if(calories.isNaN()) {
-    			txtResult.setText("Inserire un valore numerico positivo per le calorie.");
-    			return;
-    		}
-    		
-    		txtResult.appendText("Creo il grafo...\n");
-    		this.model.creaGrafo(calories);
-    		txtResult.appendText(String.format("Grafo creato! #Vertici %d #Archi %d \n", 
-    										this.model.getNumberVertex(), 
-    										this.model.getNumberEdge()));
-    		
-    		
+    		calories = Double.parseDouble(txtCalorie.getText());
+
     	} catch(NumberFormatException e) {
     		e.printStackTrace();
     		txtResult.appendText("Inserire un valore numerico valido.");
     		return;
     	}
     	
+    	if(calories < 0) {
+			txtResult.setText("Inserire un valore positivo per le calorie.");
+			return;
+		}
+		
+		if(calories.isNaN()) {
+			txtResult.setText("Inserire un valore numerico positivo per le calorie.");
+			return;
+		}
+		
+		txtResult.appendText("Creo il grafo...\n");
+		this.model.creaGrafo(calories);
+		txtResult.appendText(String.format("Grafo creato! #Vertici %d #Archi %d \n", 
+										this.model.getNumberVertex(), 
+										this.model.getNumberEdge()));
+		
+		List<String> listaPorzioni = this.model.getTipiPorzione(calories);
+		Collections.sort(listaPorzioni);
+		boxPorzioni.getItems().addAll(listaPorzioni);
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
