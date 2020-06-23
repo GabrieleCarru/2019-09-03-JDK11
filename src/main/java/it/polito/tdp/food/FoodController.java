@@ -5,7 +5,10 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.food.model.InfoArco;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,29 +43,100 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
     @FXML
     void doCammino(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	
+    	txtResult.appendText("\n");
+    	
+    	String partenza = boxPorzioni.getValue();
+    	
+    	if(partenza == null) {
+    		txtResult.appendText("Selezionare un tipo di porzione per poter cercare i correlati. \n");
+    		return;
+    	}
+    	
+    	Integer N;
+    	try {
+    		N = Integer.parseInt(txtPassi.getText());
+    		
+    		if(N < 0) {
+    			txtResult.appendText("Errore: Bisogna selezionare un valore intero positivo. \n");
+        		return;
+    		}
+    		
+    	} catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.appendText("Errore: Bisogna selezionare un valore intero positivo. \n");
+    		return;
+    	}
+    	
+    	this.model.trovaCammino(partenza, N);
+    	
+    	if(model.getCamminoMax() == null) {
+    		txtResult.appendText("Nessun cammino massimo trovato con " + N + " passi. \n");
+    	}
+    	
+    	txtResult.appendText(String.format("Trovato cammino massimo con peso = %d: \n", 
+    								this.model.getPesoMax()));
+    	
+    	for(String s : this.model.getCamminoMax()) {
+    		txtResult.appendText(String.format(" - %s \n", s));
+    	}
+    	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
+    	
+    	txtResult.appendText("\n");
+    	
+    	String partenza = boxPorzioni.getValue();
+    	
+    	if(partenza == null) {
+    		txtResult.appendText("Selezionare un tipo di porzione per poter cercare i correlati. \n");
+    		return;
+    	}
+    	
+    	List<InfoArco> vicini = this.model.getVicini(partenza);
+    	
+    	txtResult.appendText(String.format("Trovati %d tipi di porzione correlati a %s: \n", 
+    								vicini.size(), partenza));
+    	
+    	int i = 1;
+    	for(InfoArco ia : vicini) {
+    		txtResult.appendText(String.format(" %d) %s  | %d \n", 
+    						i, ia.getP2(), ia.getPeso()));
+    		i++;
+    	}
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
     	
+    	Double calories = null;
+    	try {
+    		calories = Double.parseDouble(txtCalorie.getText());
+    	} catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.appendText("Errore: inserire un valore numerico per le calorie. \n");
+    		return;
+    	}
+    	
+    	txtResult.appendText("Creazione grafo...\n");
+    	
+    	this.model.creaGrafo(calories);
+    	
+    	txtResult.appendText(String.format("Grafo creato! [#Vertici %d, #Archi %d] \n", 
+    								this.model.getNumberVertex(), this.model.getNumberEdges()));
+    	
+    	boxPorzioni.getItems().addAll(this.model.getAllTipiPorzione(calories));
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
